@@ -1,17 +1,18 @@
 from django.db.migrations import serializer
 from django.shortcuts import render
-from .models import User
-from .serializers import PasswordOTPSerializer, RegisterSerializer,LoginSerializer,PasswordOTPSerializer,PasswordResetSerializer,PasswordResetConfirmSerializer,PasswordVerifySerializer
+# from account.models import User
+from .serializers import RegisterSerializer,LoginSerializer,ForgetPasswordRequestSerializer,VerifyOTPSerializer,PasswordResetSerializer
 from rest_framework.response import Response
 from rest_framework import status,generics
 from rest_framework_simplejwt.tokens import RefreshToken
-from datetime import timedelta
+from django.contrib.auth.models import User
+from rest_framework.views import APIView
 
 
 # Create your views here.
 
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
+class RegisterView(generics.GenericAPIView):
+
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
@@ -43,84 +44,62 @@ class LoginView(generics.GenericAPIView):
                 'refresh': str(refresh),
         }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-class PasswordResetRequestView(generics.GenericAPIView):
+
+
+# view for forget password request api
+
+class ForgetPasswordRequestAPIView(generics.GenericAPIView):
+    serializer_class = ForgetPasswordRequestSerializer
+    permission_classes = []
+
+    def post(self, request):
+        serializer =ForgetPasswordRequestSerializer(data=request.data)
+
+        if serializer.is_valid():
+            return Response(
+                {f"success": True,"message": "OTP has being sent to email" },
+                status=status.HTTP_200_OK
+                )
+        return Response(
+            {"success":False, "error": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+# view for OTP verification api
+
+class OTPVerificationAPIView(generics.GenericAPIView):
+    serializer_class = VerifyOTPSerializer
+    permission_classes = []
+
+    def post(self, request):
+        serializer = VerifyOTPSerializer(data=request.data)
+
+        if serializer.is_valid():
+            return Response(
+                {"success": True, "message": "OTP is verified successfully"},
+                status=status.HTTP_200_OK,
+                )
+        return Response(
+            {"success":False, "errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+            )
+
+# view for reset password api
+
+class PasswordResetAPIView(generics.GenericAPIView):
     serializer_class = PasswordResetSerializer
+    permission_classes = []
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
-        user = User.objects.get(email=request.data["email"])
-        refresh = RefreshToken.for_user(user)
-        if email:
-            return Response({
-                'user':{
-                'email': user.email,
-                'phone_number': user.phone_number,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                "message": "Password reset email sent."
-                },
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
-                }, status=status.HTTP_200_OK)
-        return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class PasswordResetView(generics.GenericAPIView):
-    serializer_class = PasswordResetConfirmSerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        #email = serializer.validated_data['email']
-        new_password = serializer.validated_data['new_password']
-        confirm_password = serializer.validated_data['confirm_password']
-
-        if new_password != confirm_password:
-            return Response({"error": "Passwords do not match."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Here you would typically update the user's password in the database
-        # For example:
-        user = User.objects.get(email=serializer.validated_data['email'])
-        user.set_password(new_password)
-        user.save()
-        
-
-        return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)
-
-
-class PasswordVerifyView(generics.GenericAPIView):
-    serializer_class = PasswordVerifySerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer =self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        refresh = RefreshToken.for_user(user)
-        access = refresh.access_token
-        access.set_exp(lifetime=timedelta(minutes=5))
-
-        return Response({
-            "message": "Password has been reset successfully.",
-            'access': str(access),
-            'refresh': str(refresh),
-        }, status=status.HTTP_200_OK)
-
-
-class PasswordOTPView(generics.GenericAPIView):
-    serializer_class = PasswordOTPSerializer
-    #PasswordResetSerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        otp = serializer.validated_data['otp']
-        # email = serializer.validated_data['email']
-        user = User.objects.get(otp=otp)
-        # user1 = User.objects.get(email=email)
-        # Generate OTP and send it to the user's email or phone number
-        otp = "123456"  # Replace with actual OTP generation logic
-        PasswordResetOTP.objects.create(otp=otp)
-        return Response({"message": "OTP sent successfully."}, status=status.HTTP_200_OK)
+    def post(self, request):
+        serializer = PasswordResetSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"success": True, "message": "Password reset successfully."},
+                status=status.HTTP_200_OK,
+            )
+        return Response(
+            {"success": False, "errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )

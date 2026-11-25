@@ -1,6 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager,PermissionsMixin
 from django.conf import settings
+from django.core.validators import RegexValidator,validate_email
+import random
+from datetime import timedelta
+from django.utils import timezone
+# phone_regex = RegexValidator( f"^\d{10}", message="phone number must be 10 digit"
+# )
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -8,6 +15,8 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('The Email field must be set')
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
+        user.is_active = True
+        user.is_staff = True
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -28,22 +37,25 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
     staff_id = models.CharField(max_length=30, blank=True)
+
     date_joined = models.DateTimeField(auto_now_add=True)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     username = None  # Remove the username field
+
     phone_number = models.CharField(max_length=15, blank=True, null=True,unique=True)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True,blank=True, null=True, validators=[validate_email])
     otp = models.CharField(max_length=6, blank=True, null=True)
     otp_expires_at = models.DateTimeField(blank=True, null=True)
+    otp_verified = models.BooleanField(default=False)
 
     def generate_otp(self):
-        # Generate a cryptographically secure 6-digit code
-        self.otp = f"{random.SystemRandom().randint(100000, 999999)}"
+        # to generate otp
+        self.otp = str(random.randint(100000, 999999))
         self.otp_expires_at = timezone.now() + timedelta(minutes=5)
+        self.otp_verified = False
         self.save()
-        return self.otp
 
 
     USERNAME_FIELD = 'email'
