@@ -147,7 +147,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 #MAX_OTP_TRY = 5
 
-# MIN_PASSWORD_LENGHT = 8
+# MIN_PASSWORD_LENGHT = 8...
 
 # For Test EMAIL_BACKEND = django.core.mail.backends.console.EmailBackend"  django.core.mail.backends.smtp.EmailBackend
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
