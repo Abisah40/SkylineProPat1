@@ -1,12 +1,13 @@
 from django.urls import path
-from .views import RegisterView,LoginView,PasswordResetView,PasswordVerifyView,PasswordOTPView,PasswordResetRequestView
+from .views import RegisterView,LoginView,ForgetPasswordRequestAPIView,OTPVerificationAPIView,PasswordResetAPIView
 
 
+
+    #we use as_view() because the class is a genericAPIView that uses generics.genericAPIView
 urlpatterns = [
     path('register-user/', RegisterView.as_view(), name='register-user'),
     path('login-user/', LoginView.as_view(), name= 'login-user'),
-    path('reset-password-request/', PasswordResetRequestView.as_view(), name='reset-password-request'),
-    path('reset-password-otp/', PasswordOTPView.as_view(), name='reset-password-confirm'),
-    path('reset-password-change/', PasswordResetView.as_view(), name='reset-password-change'),
-    path('verify-password-complete/', PasswordVerifyView.as_view(), name='verify-password'),
+    path('forget-password/',ForgetPasswordRequestAPIView.as_view(), name= 'forget-password'),
+    path('verify-otp/',OTPVerificationAPIView.as_view(), name= 'verify-otp'),
+    path('reset-password/',PasswordResetAPIView.as_view(), name= 'reset-password'),
 ]

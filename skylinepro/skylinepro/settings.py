@@ -143,12 +143,17 @@ SPECTACULAR_SETTINGS = {
 }
 # to enable authentication / user login
 AUTH_USER_MODEL = 'account.User'
+BASE_DIR = Path(__file__).resolve().parent.parent
 
+#MAX_OTP_TRY = 5
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# MIN_PASSWORD_LENGHT = 8
+
+# For Test EMAIL_BACKEND = django.core.mail.backends.console.EmailBackend"  django.core.mail.backends.smtp.EmailBackend
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 8000
+EMAIL_PORT = 465 #587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "your-email@example.com"
-EMAIL_HOST_PASSWORD = "your-app-password"
+EMAIL_HOST_USER = "isah22234@gmail.com" #your-email@example.com"acount.User"isah22234@gmail.com
+EMAIL_HOST_PASSWORD = "ABIsah123000" #your-app-password
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
